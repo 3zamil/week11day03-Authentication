@@ -191,7 +191,9 @@ Public Claims: Claims that are publicly agreed upon, but have nothing to do with
 Private Claims: Claims that only the developer and/or the specific app uses. These are “Wild West” style, and can be pretty much anything.
 
 ```
-Do not put any data that can be considered sensitive in the JWT. Decoding a JWT from Base64 is trivial. Treat the token as clear text. The purpose of signing the token is not to mask its contents, but to verify that the signing party believes the claims of the token to be true.
+Do not put any data that can be considered sensitive in the JWT. 
+Decoding a JWT from Base64 is trivial. Treat the token as clear text. 
+The purpose of signing the token is not to mask its contents, but to verify that the signing party believes the claims of the token to be true.
 ```
 
 ## We Do: Implementing Authentication with JWT
