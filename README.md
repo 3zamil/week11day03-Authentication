@@ -139,16 +139,67 @@ Passport allows you to store the user object in requests instead of in session c
 
 When the user wants to access a route that requires authorization, the client will send a JWT with the request to the server. Since the server has the secret key to decode the JWT, it can (a) verify that the JWT has the right signature to ensure that the JWT originally came from that server, and (b) verify the user and then perform the action that needed authorization.
 
-### Additional Resources on JWTs:
-- https://medium.com/vandium-software/5-easy-steps-to-understanding-json-web-tokens-jwt-1164c0adfcec
-- https://jwt.io/introduction/
+## Steps for authentication
+So, let’s start by mapping out what we want in an authentication system. First, we will want to be able to have people register for an account. This will require some sort of personal identifier. Either a username or an email would do us well, and actually it would be beneficial to have both! We want an email address for the purpose of contacting the user later in other parts of our app, and a username in addition to an email address allows us to use the username as a public ID for our users in the app without compromising their email address which would inundate the user with spam. Second, to log-in we would need to have a password or some sort of challenge for users signing in to pass in order to be Authorized for the application. Let’s take a few notes:
+
+Requirements:
+1. User Identifier - User Name.
+2. Email Address - for contact purposes only.
+3. Password - challenge part of authentication
+
+I believe that in the common terminology, Authentication is the act of challenging a user’s sign-in attempt. Authorization is the reward for passing the challenge. That’s the most basic concept. Also, we need to salt and hash the password when we save it to the database so that it’s not stored in a recoverable way. When we compare the user’s entered password to the stored one, we will use methods that actually salt and hash the entered password to compare to the stored password.
+
+Process 1: Authentication
+Required parameters: Username, Password.
+1. Grab User from Database.
+2. Salt/Hash Entered password from User
+3. Compare Entered vs. Stored passwords.
+3.1 if password hashes match, generate a token and send to the user
+3.2 if password hashes don't match, return an error.
+
+We now have a process for the Authentication challenge. Let’s take a second to also write out our procedure for registering a user. We’ll need the user’s email address, user name, their desired password, and a confirmation of that password. First, we’ll want to check to see if the user already exists in the database then compare the two password fields to make sure they match each other. Then we’ll salt and hash the password field to store in the database. Let’s document this process quickly.
+
+Process 1: Registration
+Required Parameters: Username, Email, Password, Password2
+1. Check the database for an existing user by Email and Username.
+1.1 If there is not a user already, move on.
+1.2 If there is a user already, return an error.
+2. Compare the password fields.
+2.1 If they match, move on.
+2.2 If they don't, return an error 
+3. Salt and Hash the password
+4. Save User to Database.
+5. Return success to the client.
+
+Now that we have our procedures listed out with some basic steps, let’s take a look at tokens, what they are, and why they’re desirable in Authorization. A token, in the simplest sense is a claim that the bearer, or owner of the token, has the right to access a resource.
+
+### Token
+
+The token is Base64 encoded JSON object that securley transfers information between services. The token can be signed by synchronous methods such as a secret string that is used as the encryption key with the HMAC algorithm, or asynchronously with private and public key pairs with RSA or ECDSA. 
+-Synchronous simply means that anyone that needs to verify the token is valid, must do so with the same key. 
+-In Asynchronous signing, the Authorizing Entity, our Authentication server, signs the token with its private key, and the Client Entity verifies the signature of the token with the public key.
+The base token itself has three components: the header, the payload, and the signature. The header usually only has two parts, a type that describes the type of token which will always be JWT, and an algorithm that defines the type of encryption used to sign the token. This is where we will define whether we want to use HMAC’s SHA265 algorithm for synchronous signing, or RSA signing in asynchronous.
+
+### Payload
+
+The payload of the token is all the information that needs to be sent to the client application. This can be the information relating to our user. This information is setup in the form of “Claims” these claims can be either Registered, Public, or Private. Registered Claims are those that are predefined by the JWT standard. Some simple ones are iss or issuer, exp or expiration, sub or subject
+
+The next type of claims are public claims. These are defined at will by JWT users, but should be defined here. Alternatively, you can define your public claims in your own namespace.
+Finally, we get to have private claims, which is where you would want to place your information for your client application. A private claim is simply one that two parties agree to, and requires no setup, and can be just used. This is how we’ll get our specific application information to the client. Let’s just quickly review the Claim Types:
+Registered Claims: Registered Claims that are provided to basic, consistent information within the token.
+Public Claims: Claims that are publicly agreed upon, but have nothing to do with the specification. These should be used if considering more of an OAuth situation where users are authenticating for an ecosystem of applications.
+Private Claims: Claims that only the developer and/or the specific app uses. These are “Wild West” style, and can be pretty much anything.
+
+```
+Do not put any data that can be considered sensitive in the JWT. Decoding a JWT from Base64 is trivial. Treat the token as clear text. The purpose of signing the token is not to mask its contents, but to verify that the signing party believes the claims of the token to be true.
+```
 
 ## We Do: Implementing Authentication with JWT
-
 Let's fork and clone the blogy app attached with this lesson. As we're going to be adding authentication on top of it.
 
 ### Additional Resources on using JWTs in MERN apps
-
+- https://medium.com/vandium-software/5-easy-steps-to-understanding-json-web-tokens-jwt-1164c0adfcec
+- https://jwt.io/introduction/
 - https://medium.com/@rajaraodv/securing-react-redux-apps-with-jwt-tokens-fcfe81356ea0
 - https://hptechblogs.com/using-json-web-token-react/
 - https://blog.jscrambler.com/implementing-jwt-using-passport/
